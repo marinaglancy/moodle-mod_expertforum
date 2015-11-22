@@ -22,8 +22,6 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-// Replace expertforum with the name of your module and remove this line.
-
 require_once(__DIR__ . '/../../config.php');
 
 $instanceid  = required_param('e', PARAM_INT);
@@ -40,6 +38,13 @@ $PAGE->set_title(format_string($expertforum->name));
 $PAGE->set_heading(format_string($course->fullname));
 
 $form = new mod_expertforum_post_form(null, array('expertforum' => $expertforum));
+
+if ($form->is_cancelled()) {
+    redirect(new moodle_url('/mod/expertforum/view.php', array('id' => $cm->id)));
+} else if ($data = $form->get_data()) {
+    $post = mod_expertforum_post::create($data, $cm);
+    redirect($post->get_url());
+}
 
 
 // Output starts here.

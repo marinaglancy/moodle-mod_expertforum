@@ -73,8 +73,13 @@ if ($expertforum->intro) {
     echo $OUTPUT->box(format_module_intro('expertforum', $expertforum, $cm->id), 'generalbox mod_introbox', 'expertforumintro');
 }
 
-// Replace the following lines with you own code.
-echo $OUTPUT->heading('Yay! It works!');
+echo $OUTPUT->single_button(
+        new moodle_url('/mod/expertforum/post.php', array('e' => $expertforum->id)),
+        'Ask question' // TODO string
+        );
+
+$listing = new mod_expertforum\output\listing($cm);
+echo $OUTPUT->render_from_template('mod_expertforum/listing', $listing->export_for_template($OUTPUT));
 
 // Finish the page.
 echo $OUTPUT->footer();

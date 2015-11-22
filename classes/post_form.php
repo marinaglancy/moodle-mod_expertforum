@@ -41,13 +41,32 @@ class mod_expertforum_post_form extends moodleform {
     public function definition() {
 
         $expertforum = $this->_customdata['expertforum'];
+        $parent = null;
+        if (!empty($this->_customdata['parent'])) {
+            $parent = $this->_customdata['parent'];
+        }
 
         $mform = $this->_form;
 
         $mform->addElement('hidden', 'e');
         $mform->setType('e', PARAM_INT);
 
-        $this->set_data(array('e' => $expertforum->id));
+        $mform->addElement('hidden', 'parent');
+        $mform->setType('parent', PARAM_INT);
+
+        if (!$parent) {
+            $mform->addElement('text', 'subject', 'SUBJECT'); // TODO string;
+            $mform->setType('subject', PARAM_NOTAGS);
+            // TODO limit length
+        }
+
+        $mform->addElement('editor', 'message_editor', 'MESSAGE', mod_expertforum_post::editoroptions()); // TODO string;
+
+        $data = array('e' => $expertforum->id);
+        if ($parent) {
+            $data['parent'] = $parent->id;
+        }
+        $this->set_data($data);
 
         $this->add_action_buttons();
     }
