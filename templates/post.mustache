@@ -1,0 +1,64 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template mod_expertforum/post
+
+    Displays one post (question with answers)
+
+    Classes required for JS:
+    * none
+
+    Data attributes required for JS:
+    * none
+
+    Context variables required for this template:
+    * none
+
+    Example context (json):
+    {
+        "id":1,
+        "subject":"Hello",
+        "votes":4,
+        "message":"My message",
+        "answers":[
+            {"id":2,
+            "votes":3,
+            "message":"My answer1"},
+            {"id":3,
+            "votes":1,
+            "message":"My answer2"}
+        ]
+    }
+}}
+<div class="post" data-post-id="{{id}}">
+    <div class="votes questionvotes">{{votes}}</div>
+    <div class="message questionmessage">{{{message}}}</div>
+    <div class="timecreated">{{{timecreated}}}</div>
+    {{#username}}
+        <div class="user">
+            <div class="userpicture">{{{userpicture}}}</div>
+            <div class="username">{{{username}}}</div>
+        </div>
+    {{/username}}
+    <div class="answers">
+        {{#answers}}
+            <div class="answer" data-postid="{{id}}">
+                {{> mod_expertforum/answer}}
+            </div>
+        {{/answers}}
+    </div>
+</div>
