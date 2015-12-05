@@ -33,8 +33,52 @@
         "posts": [ {"subject":"Hello", "votes":2, "answers":1, "viewurl":"http://moodle.org"} ]
     }
 }}
+<div class="mod-expertforum-questionlist">
 {{#posts}}
-    <div class="">
-        <a href="{{viewurl}}">{{subject}}</a> ({{answers}}, {{votes}}) {{timecreated}}
+    <div class="question-summary">
+        <div class="statscontainer">
+            <div class="statsarrow"></div>
+            <div class="stats">
+                <div class="vote">
+                    <div class="votes">
+                        <span class="vote-count-post">
+                            <strong>{{votes}}</strong>
+                        </span>
+                        votes
+                    </div>
+                    <div class="status {{^answers}}unanswered{{/answers}}{{#answers}}answered{{/answers}}">
+                        <strong>{{answers}}</strong> answers
+                    </div>
+                </div>
+                <div class="status"></div>
+            </div>
+            <!--div class="views">{{views}} views</div-->
+        </div>
+        <div class="summary">
+            <h3><a class="question-hyperlink" href="{{viewurl}}">{{subject}}</a></h3>
+            <div class="excerpt">{{{excerpt}}}</div>
+            <div class="tags">
+                {{#tags}}
+                    <a class="post-tag" rel="tag" title="show questions tagged '{{tagname}}'" href="{{tagurl}}">{{tagname}}</a>
+                {{/tags}}
+            </div>
+            <div class="started fr">
+                <div class="user-info">
+                    <div class="user-action-time">
+                        asked
+                        <span title="2015-07-15 08:49:21Z" class="relativetime">Jul 15 at 8:49</span>
+                    </div>
+                    <div class="user-gravatar32">
+                        {{{userpicture}}}
+                    </div>
+                    <div class="user-details">
+                        {{{username}}}
+                        <br/>
+                        <span class="reputation-score" title="reputation score">xxx</span>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 {{/posts}}
+</div>

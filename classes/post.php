@@ -125,6 +125,11 @@ class mod_expertforum_post implements templatable {
         return $text;
     }
 
+    public function get_excerpt() {
+        $message = $this->get_formatted_message();
+        return html_to_text(shorten_text($message, 250), 300); // TODO exceprt legth as parameter.
+    }
+
     public static function get($id, cm_info $cm, $strictness = IGNORE_MISSING) {
         global $DB;
         $userfields = \user_picture::fields('u', array('deleted'), 'useridx', 'user');
