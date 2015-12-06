@@ -173,11 +173,20 @@ class mod_expertforum_post implements templatable {
         if (!isloggedin() || isguestuser()) {
             return;
         }
+        if ($this->record->userid == $USER->id) {
+            // Can't vote on own posts.
+            return;
+        }
         $params = array('userid' => $USER->id, 'answerid' => $answerid, 'parent' => $this->record->id);
+        if ($answerid != $this->record->id) {
+            $parentsql = '= :parent';
+        } else {
+            $parentsql = 'IS NULL';
+        }
         $answer = $DB->get_record_sql('SELECT p.id, p.parent, v.id AS voteid, v.vote
                 FROM {expertforum_post} p
                 LEFT JOIN {expertforum_vote} v ON v.postid = p.id AND v.userid = :userid
-                WHERE p.id = :answerid AND p.parent = :parent',
+                WHERE p.id = :answerid AND p.parent '.$parentsql,
                 $params);
         if (!$answer) {
             return;
@@ -205,9 +214,9 @@ class mod_expertforum_post implements templatable {
         $DB->execute("UPDATE {expertforum_post} p SET votes =
                 (SELECT SUM(v.vote) FROM {expertforum_vote} v WHERE v.postid = p.id)
                 WHERE p.id = :answerid", $params);
-        $DB->execute("UPDATE {expertforum_post} p SET votes =
+        /*$DB->execute("UPDATE {expertforum_post} p SET votes =
                 (SELECT SUM(v.vote) FROM {expertforum_vote} v WHERE v.parent = p.id)
-                WHERE p.id = :parent", $params);
+                WHERE p.id = :parent", $params);*/
     }
 
     public function get_timestamp() {
