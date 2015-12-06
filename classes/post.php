@@ -219,18 +219,23 @@ class mod_expertforum_post implements templatable {
         $record->subject = $this->get_formatted_subject();
         $record->message = $this->get_formatted_message();
         $record->votes = empty($this->votes) ? 0 : $this->votes;
-        $record->timecreated = userdate($this->record->timecreated, get_string('strftimedatetime', 'core_langconfig'));
+        //$record->timecreated = userdate($this->record->timecreated, get_string('strftimedatetime', 'core_langconfig'));
+        $record->timestamp = 'asked <span title="2015-12-05 12:12:18Z" class="relativetime">20 hours ago</span>'; // TODO
         $record->userpicture = null;
         $record->username = null;
+        $record->userreputation = null;
+        $record->isfavourite = 1; // TODO
+        $record->favouritecount = 5; // TODO
 
         $user = \user_picture::unalias($this->record, array('deleted'), 'useridx', 'user');
         if (isset($user->id)) {
             $record->userpicture = $output->user_picture($user, array('size' => 35));
             $record->username = fullname($user);
             if (user_can_view_profile($user)) {
-                $profilelink = new moodle_url('/user/view.php', array('id' => $user->id));
+                $profilelink = new moodle_url('/user/view.php', array('id' => $user->id, 'course' => $this->cm->course));
                 $record->username = html_writer::link($profilelink, $record->username);
             }
+            $record->userreputation = 15; // TODO
         }
 
         if (empty($this->record->parent)) {
@@ -239,12 +244,19 @@ class mod_expertforum_post implements templatable {
             foreach ($answers as $answer) {
                 $record->answers[] = $answer->export_for_template($output);
             }
+            if ($answers) {
+                $record->answersheader = get_string('answerscount', 'mod_expertforum', count($record->answers));
+            }
         } else {
-            $record->upvoteurl = $this->get_url()->out(false,
-                    array('upvote' => $this->record->id, 'sesskey' => sesskey()));
-            $record->downvoteurl = $this->get_url()->out(false,
-                    array('downvote' => $this->record->id, 'sesskey' => sesskey()));
+            $record->parent = $this->record->parent;
         }
+
+        $record->upvoteurl = $this->get_url()->out(false,
+                array('upvote' => $this->record->id, 'sesskey' => sesskey()));
+        $record->downvoteurl = $this->get_url()->out(false,
+                array('downvote' => $this->record->id, 'sesskey' => sesskey()));
+
+        $record->tags = array(array('tagname' => 'php', 'tagurl' => '#'), array('tagname' => 'moodle', 'tagurl' => '#')); // TODO
         return $record;
     }
 }

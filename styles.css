@@ -17,7 +17,7 @@
     float: left;
     margin-right: 8px;
     margin-left: 8px;
-}   
+}
 
 .statsarrow {
     float: right;
@@ -45,16 +45,10 @@
     font-size: 11px;
 }
 
-.vote span {
-    display: block;
-    color: #777;
-}
-.vote-count-post {
+.votes strong {
     display: block;
     font-size: 20px;
     margin: 0px 0px 3px;
-}
-.vote-count-post strong {
     font-weight: normal;
     color: #777;
 }
@@ -196,4 +190,177 @@ answer-hyperlink, .question-hyperlink {
     font-weight: normal;
     color: #777;
     margin-left: 1px;
+}
+
+
+/* View single thread */
+.question {
+    clear: both;
+}
+.votecell {
+    vertical-align: top;
+    padding-right: 15px;
+}
+.vote {
+    text-align: center;
+}
+.votecell .vote {
+    min-width: 46px;
+}
+
+
+.envelope-on, .envelope-off, .vote-up-off, .vote-up-on, .vote-down-off, .vote-down-on, .star-on, .star-off, .comment-up-off, .comment-up-on, .comment-flag, .edited-yes, .feed-icon, .vote-accepted-off, .vote-accepted-on, .vote-accepted-bounty, .badge-earned-check, .delete-tag, .grippie, .expander-arrow-hide, .expander-arrow-show, .expander-arrow-small-hide, .expander-arrow-small-show, .anonymous-gravatar, .badge1, .badge2, .badge3 {
+    background-image: url([[pix:mod_expertforum|sprites]]), none;
+    background-repeat: no-repeat;
+    overflow: hidden;
+}
+.vote-up-off, .vote-up-on, .vote-down-off, .vote-down-on, .star-on, .star-off, .vote-accepted-off, .vote-accepted-on {
+    display: block;
+    margin: 0px auto 2px;
+    text-indent: -999em;
+    width: 40px;
+    height: 40px;
+}
+.vote-up-off, .vote-down-off, .vote-accepted-off, .star-off, .comment-up-off, .flag-off {
+    cursor: pointer;
+}
+.vote-up-off, .vote-up-on, .vote-down-off, .vote-down-on, .star-on, .star-off, .comment-up-off, .comment-up-on, .comment-flag, .flag-off, .vote-accepted-off, .vote-accepted-on {
+    text-indent: -9999em;
+    font-size: 1px;
+}
+.vote-up-off {
+    background-position: 0px -170px;
+}
+.envelope-on, .envelope-off, .vote-up-off, .vote-up-on, .vote-down-off, .vote-down-on, .star-on, .star-off, .comment-up-off, .comment-up-on, .comment-flag, .edited-yes, .feed-icon, .vote-accepted-off, .vote-accepted-on, .vote-accepted-bounty, .badge-earned-check, .delete-tag, .grippie, .expander-arrow-hide, .expander-arrow-show, .expander-arrow-small-hide, .expander-arrow-small-show, .anonymous-gravatar, .badge1, .badge2, .badge3, .gp-share, .fb-share, .twitter-share, #notify-container span.notify-close, .migrated.to, .migrated.from {
+    background-size: initial;
+}
+.vote-up-off, .vote-up-on, .vote-down-off, .vote-down-on {
+    height: 30px;
+}
+
+
+.vote-count-post {
+    display: block;
+    font-size: 20px;
+    margin: 0px 0px 3px;
+}
+.vote span {
+    display: block;
+    color: #777;
+}
+.votecell .vote-count-post {
+    margin: 8px 0px;
+}
+
+.vote-down-off {
+    background-position: 0px -220px;
+    margin-bottom: 8px;
+}
+.vote-down-off, .vote-down-on {
+    margin-bottom: 10px;
+}
+
+.star-off {
+    background-position: 0px -120px;
+}
+.star-on, .star-off {
+    height: 30px;
+}
+.star-on {
+    background-position: -40px -120px;
+}
+
+.favouritecount {
+    text-align: center;
+    color: #777;
+    font-weight: normal;
+}
+.favouritecount.favouritecount-selected {
+    color: #D4A849;
+}
+
+.question .postcell {
+    vertical-align: top;
+}
+
+.post-text, .wmd-preview {
+    width: 660px;
+    margin-bottom: 5px;
+    word-wrap: break-word;
+    font-size: 15px;
+    line-height: 1.3;
+}
+
+.post-taglist {
+    margin-bottom: 10px;
+    clear: both;
+}
+
+.fw {
+    margin-bottom: 4px;
+    width: 100%;
+}
+
+.vt {
+    vertical-align: top;
+}
+.post-menu {
+    padding-top: 2px;
+}
+.post-menu > a {
+    padding: 0px 3px 2px;
+    color: #888;
+}
+.lsep {
+    margin: 0px 2px;
+    color: #1B4072;
+    font-size: 1px;
+    visibility: hidden;
+}
+.post-menu .lsep {
+    margin: 0px;
+    padding: 0px;
+}
+
+.post-signature {
+    text-align: left;
+    vertical-align: top;
+    width: 175px;
+    height: 58px;
+    padding: 5px;
+}
+.owner {
+    background-color: #E0EAF1;
+}
+
+
+#answers {
+    clear: both;
+    padding-top: 10px;
+    width: 728px;
+}
+
+#answers-header {
+    margin-top: 10px;
+    width: 728px;
+}
+
+.subheader {
+    clear: both;
+    margin-bottom: 15px;
+    height: 40px;
+    border-bottom: 1px solid #E0E0E0;
+}
+.subheader {
+    height: 34px;
+    border-bottom: 1px solid #E0E0E0;
+}
+
+.answer {
+    padding-bottom: 20px;
+    padding-top: 20px;
+    width: 728px;
+}
+.question-page #answers .answer {
+    border-bottom: 1px solid #F0F0F0;
 }

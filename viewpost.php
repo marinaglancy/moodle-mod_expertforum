@@ -65,7 +65,7 @@ $PAGE->navbar->add($post->get_formatted_subject());
 echo $OUTPUT->header();
 echo $OUTPUT->heading($post->get_formatted_subject());
 
-echo $OUTPUT->render_from_template('mod_expertforum/post', $post->export_for_template($OUTPUT));
+echo $OUTPUT->render_from_template('mod_expertforum/thread', $post->export_for_template($OUTPUT));
 
 $form->display();
 

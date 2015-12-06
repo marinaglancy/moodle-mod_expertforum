@@ -17,7 +17,7 @@
 {{!
     @template mod_expertforum/post
 
-    Displays one post (question with answers)
+    Displays one answer
 
     Classes required for JS:
     * none
@@ -31,34 +31,107 @@
     Example context (json):
     {
         "id":1,
-        "subject":"Hello",
         "votes":4,
         "message":"My message",
-        "answers":[
-            {"id":2,
-            "votes":3,
-            "message":"My answer1"},
-            {"id":3,
-            "votes":1,
-            "message":"My answer2"}
-        ]
+        "parent":0,
+        "isfavourite":0,
+        "favouritecount":5,
+        "votes":2,
+        "timestamp":"asked 10 hours ago",
+        "userpicture":"",
+        "username":"User X",
+        "userreputation":15
     }
 }}
-<div class="post" data-post-id="{{id}}">
-    <div class="votes questionvotes">{{votes}}</div>
-    <div class="message questionmessage">{{{message}}}</div>
-    <div class="timecreated">{{{timecreated}}}</div>
-    {{#username}}
-        <div class="user">
-            <div class="userpicture">{{{userpicture}}}</div>
-            <div class="username">{{{username}}}</div>
-        </div>
-    {{/username}}
-    <div class="answers">
-        {{#answers}}
-            <div class="answer" data-postid="{{id}}">
-                {{> mod_expertforum/answer}}
-            </div>
-        {{/answers}}
-    </div>
-</div>
+<table>
+    <tbody>
+        <tr>
+            <td class="votecell">
+                <div class="vote">
+                    <input name="_id_" value="{{id}}" type="hidden">
+                    <a class="vote-up-off" title="{{^parent}}{{#str}}questionupvote,mod_expertforum{{/str}}{{/parent}}{{#parent}}{{#str}}answerupvote,mod_expertforum{{/str}}{{/parent}}" href="{{upvoteurl}}">{{#str}}upvote,mod_expertforum{{/str}}</a>
+                    <span itemprop="upvoteCount" class="votes">{{#str}}votescountshort,mod_expertforum,{{votes}}{{/str}}</span>
+                    <a class="vote-down-off" title="{{^parent}}{{#str}}questiondownvote,mod_expertforum{{/str}}{{/parent}}{{#parent}}{{#str}}answerdownvote,mod_expertforum{{/str}}{{/parent}}" href="{{downvoteurl}}">{{#str}}downvote,mod_expertforum{{/str}}</a>
+                    {{^parent}}
+                        <!--TODO-->
+                        {{#isfavourite}}
+                            <a class="star-on" href="#" title="{{#str}}favouriteoff,mod_expertforum{{/str}}">{{#str}}favourite,mod_expertforum{{/str}}</a>
+                        {{/isfavourite}}
+                        {{^isfavourite}}
+                            <a class="star-off" href="#" title="{{#str}}favouriteon,mod_expertforum{{/str}}">{{#str}}favourite,mod_expertforum{{/str}}</a>
+                        {{/isfavourite}}
+                        {{#favouritecount}}
+                        <div class="favouritecount {{#isfavourite}}favouritecount-selected{{/isfavourite}}">{{favouritecount}}</div>
+                        {{/favouritecount}}
+                    {{/parent}}
+                </div>
+            </td>
+
+
+            <td class="postcell">
+                <div>
+                    <div class="post-text" itemprop="text">
+                        {{{message}}}
+                    </div>
+                    {{^parent}}
+                    <div class="tags">
+                        {{#tags}}
+                            <a class="post-tag" rel="tag" title="show questions tagged '{{tagname}}'" href="{{tagurl}}">{{tagname}}</a>
+                        {{/tags}}
+                    </div>
+                    {{/parent}}
+                    <table class="fw">
+                        <tbody>
+                            <tr>
+                                <td class="vt">
+                                    <!--TODO-->
+                                    <!--div class="post-menu"><a href="/q/34104762/2755800" title="short permalink to this question" class="short-link" id="link-post-34104762">share</a><span class="lsep">|</span><a href="/posts/34104762/edit" class="suggest-edit-post" title="revise and improve this post">edit</a><span class="lsep">|</span><a href="#" class="flag-post-link" title="flag this post for serious problems or moderator attention" data-postid="34104762">flag</a></div-->
+                                </td>
+                                <td class="post-signature owner">
+                                    <div class="user-info ">
+                                        <div class="user-action-time">
+                                            {{{timestamp}}}
+                                        </div>
+                                        <div class="user-gravatar32">
+                                            {{{userpicture}}}
+                                        </div>
+                                        <div class="user-details">
+                                            {{{username}}}
+                                            <br/>
+                                            <span class="reputation-score" title="reputation score">{{userreputation}}</span>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td class="votecell">
+            </td>
+            <td>
+                <div id="comments-{{id}}" class="comments  dno">
+		    <table>
+                        <tbody data-remaining-comments-count="0" data-canpost="true" data-cansee="false" data-comments-unavailable="false" data-addlink-disabled="false">
+                            <tr>
+                                <td></td>
+                                <td></td>
+                            </tr>
+                        </tbody>
+			<tfoot>
+                            <tr>
+                                <td></td>
+                                <td class="comment-form">
+                                    <!--TODO-->
+                                    <!--form></form-->
+                                </td>
+                            </tr>
+                        </tfoot>
+		    </table>
+                </div>
+            </td>
+        </tr>
+    </tbody>
+</table>

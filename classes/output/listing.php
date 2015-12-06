@@ -88,6 +88,8 @@ class listing implements templatable {
             $r->votes = $record->votes;
             $r->answers = $record->answers;
             $r->excerpt = $post->get_excerpt();
+            $r->views = 0; // TODO
+            $r->timestamp = 'asked <span title="2015-07-15 08:49:21Z" class="relativetime">Jul 15 at 8:49</span>'; // TODO
 
             // User information.
             $userpicture = new user_picture($user);
@@ -102,6 +104,9 @@ class listing implements templatable {
                 $userpicture->link = false;
             }
             $r->userpicture = $output->render($userpicture);
+            $r->userreputation = 15; // TODO
+
+            $r->tags = array(array('tagname' => 'php', 'tagurl' => '#'), array('tagname' => 'moodle', 'tagurl' => '#')); // TODO
 
             $posts[] = $r;
         }

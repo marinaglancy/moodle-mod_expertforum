@@ -30,7 +30,16 @@
 
     Example context (json):
     {
-        "posts": [ {"subject":"Hello", "votes":2, "answers":1, "viewurl":"http://moodle.org"} ]
+        "posts": [ {"subject":"Hello",
+            "excerpt": "This is my very important question",
+            "votes":2,
+            "answers":1,
+            "views":4,
+            "viewurl":"http://moodle.org",
+            "timestamp":"asked 15h ago",
+            "userpicture": "",
+            "username": "User X",
+            "userreputation": 15} ]
     }
 }}
 <div class="mod-expertforum-questionlist">
@@ -41,18 +50,15 @@
             <div class="stats">
                 <div class="vote">
                     <div class="votes">
-                        <span class="vote-count-post">
-                            <strong>{{votes}}</strong>
-                        </span>
-                        votes
+                        {{#str}}votescount,mod_expertforum,{{votes}}{{/str}}
                     </div>
                     <div class="status {{^answers}}unanswered{{/answers}}{{#answers}}answered{{/answers}}">
-                        <strong>{{answers}}</strong> answers
+                        {{#str}}answerscount,mod_expertforum,{{answers}}{{/str}}
                     </div>
                 </div>
                 <div class="status"></div>
             </div>
-            <!--div class="views">{{views}} views</div-->
+            <!--div class="views">{{#str}}viewscount,mod_expertforum,{{views}}{{/str}}</div--> <!--TODO-->
         </div>
         <div class="summary">
             <h3><a class="question-hyperlink" href="{{viewurl}}">{{subject}}</a></h3>
@@ -65,8 +71,7 @@
             <div class="started fr">
                 <div class="user-info">
                     <div class="user-action-time">
-                        asked
-                        <span title="2015-07-15 08:49:21Z" class="relativetime">Jul 15 at 8:49</span>
+                        {{{timestamp}}}
                     </div>
                     <div class="user-gravatar32">
                         {{{userpicture}}}
@@ -74,7 +79,7 @@
                     <div class="user-details">
                         {{{username}}}
                         <br/>
-                        <span class="reputation-score" title="reputation score">xxx</span>
+                        <span class="reputation-score" title="{{#str}}reputation,mod_expertforum{{/str}}">{{userreputation}}</span>
                     </div>
                 </div>
             </div>

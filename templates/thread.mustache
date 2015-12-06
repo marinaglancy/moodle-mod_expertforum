@@ -15,9 +15,9 @@
     along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 }}
 {{!
-    @template mod_expertforum/answer
+    @template mod_expertforum/thread
 
-    Displays one answer
+    Displays one post (question with answers)
 
     Classes required for JS:
     * none
@@ -30,20 +30,33 @@
 
     Example context (json):
     {
-        "subject":"Hello",
+        "id":1,
         "votes":4,
         "message":"My message",
+        "answersheader":"2 answers",
+        "answers":[
+            {"id":2,
+            "votes":3,
+            "message":"My answer1"},
+            {"id":3,
+            "votes":1,
+            "message":"My answer2"}
+        ]
     }
 }}
-<div class="votes answervotes">{{votes}}
-<a href="{{upvoteurl}}">up</a>
-<a href="{{downvoteurl}}">down</a>
+<div id="question" class="question" data-post-id="{{id}}">
+    {{> mod_expertforum/post}}
 </div>
-<div class="message answermessage">{{{message}}}</div>
-<div class="timecreated">{{{timecreated}}}</div>
-{{#username}}
-    <div class="user">
-        <div class="userpicture">{{{userpicture}}}</div>
-        <div class="username">{{{username}}}</div>
+<div id="answers">
+    <a name="tab-top"></a>
+    <div id="answers-header">
+        <h2>{{{answersheader}}}</h2>
     </div>
-{{/username}}
+    {{#answers}}
+        <a name="{{id}}"></a>
+        <div id="answer-{{id}}" class="answer" data-postid="{{id}}">
+            <div class="new-post-activity" data-postid="{{id}}"></div>
+            {{> mod_expertforum/post}}
+        </div>
+    {{/answers}}
+</div>

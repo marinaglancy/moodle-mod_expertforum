@@ -28,10 +28,23 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$string['modulename'] = 'Expert forum';
-$string['modulenameplural'] = 'Expert forums';
-$string['modulename_help'] = 'The Expert forum module allows to create forums where answers can be up/down voted and automatically sorted with the most voted first';
+$string['answerdownvote'] = 'This answer is not useful';
+$string['answerscount'] = '<strong>{$a}</strong> answers';
+$string['answerupvote'] = 'This answer is useful';
+$string['downvote'] = 'down vote';
 $string['expertforumname'] = 'Expert forum name';
-$string['expertforum'] = 'Expert forum';
+$string['favourite'] = 'favourite';
+$string['favouriteoff'] = 'This is a favourite question (click to undo)';
+$string['favouriteon'] = 'Click to mark as favourite';
+$string['modulename'] = 'Expert forum';
+$string['modulename_help'] = 'The Expert forum module allows to create forums where answers can be up/down voted and automatically sorted with the most voted first';
+$string['modulenameplural'] = 'Expert forums';
 $string['pluginadministration'] = 'Expert forum administration';
 $string['pluginname'] = 'Expert forum';
+$string['questiondownvote'] = 'This question does not show any research effort; it is unclear or not useful';
+$string['questionupvote'] = 'This question shows research effort; it is useful and clear';
+$string['reputation'] = 'reputation score';
+$string['upvote'] = 'up vote';
+$string['viewscount'] = '<strong>{$a}</strong> views';
+$string['votescount'] = '<strong>{$a}</strong> votes';
+$string['votescountshort'] = '<strong>{$a}</strong>';
