@@ -38,19 +38,29 @@ use templatable, renderer_base, stdClass, user_picture, cm_info;
 class listing implements templatable {
     protected $records;
     protected $cm;
+    protected $fetchedtags;
 
     /**
      * Constructor
      *
      * @param \cm_info $cm
+     * @global \moodle_database $DB
      */
-    public function __construct(cm_info $cm) {
+    public function __construct(cm_info $cm, $tagobject = null) {
         global $DB;
+        $params = array('expertforumid' => $cm->instance, 'courseid' => $cm->course);
+        $subquery = '';
+        if ($tagobject) {
+            $subquery = "INNER JOIN {tag_instance} ti ON ti.itemtype = :recordtype AND ti.itemid = p.id AND ti.tagid = :tagid";
+            $params['tagid'] = $tagobject->id;
+            $params['recordtype'] = 'expertforum_post';
+        }
         $postfields = "p.id, p.subject, p.votes, p.timecreated, p.subject, p.message, p.messageformat";
         $userfields = user_picture::fields('u', array('deleted'), 'useridx', 'user');
         $userfieldsnoalias = user_picture::fields('u', array('deleted'));
         $sql = "SELECT $postfields, $userfields, COUNT(a.id) AS answers
             FROM {expertforum_post} p
+            $subquery
             LEFT OUTER JOIN {user} u ON u.deleted = 0 AND u.id = p.userid
             LEFT OUTER JOIN {expertforum_post} a ON a.parent = p.id
             WHERE p.parent is null
@@ -59,9 +69,22 @@ class listing implements templatable {
             GROUP BY $postfields, $userfieldsnoalias
             ORDER BY p.timecreated DESC
                 ";
-        $params = array('expertforumid' => $cm->instance, 'courseid' => $cm->course);
+        // TODO limit, offset
         $this->records = $DB->get_records_sql($sql, $params);
         $this->cm = $cm;
+
+        list($itemsql, $itemparams) = $DB->get_in_or_equal(array_keys($this->records), SQL_PARAMS_NAMED);
+        $sql = "SELECT ti.itemid, tg.id, tg.name, tg.rawname
+                  FROM {tag_instance} ti
+                  JOIN {tag} tg ON tg.id = ti.tagid
+                  WHERE ti.itemtype = :recordtype AND ti.itemid $itemsql
+               ORDER BY ti.ordering ASC";
+        $itemparams['recordtype'] = 'expertforum_post';
+        $this->fetchedtags = array();
+        $rs = $DB->get_recordset_sql($sql, $itemparams);
+        foreach ($rs as $record) {
+            $this->fetchedtags[$record->itemid][] = $record;
+        }
     }
 
     /**
@@ -76,7 +99,8 @@ class listing implements templatable {
     public function export_for_template(\renderer_base $output) {
         $posts = array();
         foreach ($this->records as $id => $record) {
-            $post = new \mod_expertforum_post($record, $this->cm);
+            $post = new \mod_expertforum_post($record, $this->cm,
+                    empty($this->fetchedtags[$id]) ? array() : $this->fetchedtags[$id]);
             $user = \user_picture::unalias($record, array('deleted'), 'useridx', 'user');
 
             $r = new stdClass();
@@ -89,7 +113,7 @@ class listing implements templatable {
             $r->answers = $record->answers;
             $r->excerpt = $post->get_excerpt();
             $r->views = 0; // TODO
-            $r->timestamp = 'asked <span title="2015-07-15 08:49:21Z" class="relativetime">Jul 15 at 8:49</span>'; // TODO
+            $r->timestamp = $post->get_timestamp();
 
             // User information.
             $userpicture = new user_picture($user);
@@ -106,7 +130,7 @@ class listing implements templatable {
             $r->userpicture = $output->render($userpicture);
             $r->userreputation = 15; // TODO
 
-            $r->tags = array(array('tagname' => 'php', 'tagurl' => '#'), array('tagname' => 'moodle', 'tagurl' => '#')); // TODO
+            $r->tags = $post->get_tags();
 
             $posts[] = $r;
         }

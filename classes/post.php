@@ -35,10 +35,12 @@ class mod_expertforum_post implements templatable {
 
     protected $record;
     protected $cm;
+    protected $cachedtags = null;
 
-    public function __construct($record, cm_info $cm) {
+    public function __construct($record, cm_info $cm, $fetchedtags = null) {
         $this->record = $record;
         $this->cm = $cm;
+        $this->cachedtags = $fetchedtags;
     }
 
     public function __get($name) {
@@ -57,7 +59,8 @@ class mod_expertforum_post implements templatable {
     }
 
     public static function create($data, cm_info $cm) {
-        global $USER, $DB;
+        global $USER, $DB, $CFG;
+        require_once($CFG->dirroot.'/tag/lib.php');
         $time = time();
         $data = (object)((array)$data + array(
             'groupid' => 0,
@@ -95,13 +98,17 @@ class mod_expertforum_post implements templatable {
             $DB->update_record('expertforum_post', $data);
         }
 
+        if (!empty($data->tags)) {
+            tag_set('expertforum_post', $data->id, $data->tags, 'mod_expertforum', $cm->context->id);
+        }
+
         return new mod_expertforum_post($data, $cm);
     }
 
-    public function get_url() {
+    public function get_url($params = null) {
         $id = empty($this->record->parent) ? $this->record->id : $this->record->parent;
-        $url = new moodle_url('/mod/expertforum/viewpost.php',
-                array('e' => $this->cm->instance, 'id' => $id));
+        $urlparams = array('e' => $this->cm->instance, 'id' => $id) + ($params ? $params : array());
+        $url = new moodle_url('/mod/expertforum/viewpost.php', $urlparams);
         return $url;
     }
 
@@ -203,6 +210,36 @@ class mod_expertforum_post implements templatable {
                 WHERE p.id = :parent", $params);
     }
 
+    public function get_timestamp() {
+        $now = time();
+        $timestamp = format_time($now - $this->record->timecreated);
+        $timestamp = html_writer::span($timestamp, 'relativetime',
+                array('title' => userdate($this->record->timecreated, get_string('strftimedatetime', 'core_langconfig'))));
+        if (empty($this->record->parent)) {
+            return get_string('askedago', 'mod_expertforum', $timestamp);
+        } else {
+            return get_string('answeredago', 'mod_expertforum', $timestamp);
+        }
+    }
+
+    public function get_tags() {
+        global $CFG;
+        require_once($CFG->dirroot.'/tag/lib.php');
+        $rv = array();
+        if (empty($this->record->parent)) {
+            if ($this->cachedtags === null) {
+                $this->cachedtags = tag_get_tags('expertforum_post', $this->id);
+            }
+            $url = new moodle_url('/mod/expertforum/view.php', array('id' => $this->cm->id));
+            foreach ($this->cachedtags as $tag) {
+                $url->param('tag', $tag->name);
+                $rv[] = array('tagname' => $tag->rawname,
+                    'tagurl' => $url->out(false));
+            }
+        }
+        return $rv;
+    }
+
     /**
      * Function to export the renderer data in a format that is suitable for a
      * mustache template. This means:
@@ -219,13 +256,12 @@ class mod_expertforum_post implements templatable {
         $record->subject = $this->get_formatted_subject();
         $record->message = $this->get_formatted_message();
         $record->votes = empty($this->votes) ? 0 : $this->votes;
-        //$record->timecreated = userdate($this->record->timecreated, get_string('strftimedatetime', 'core_langconfig'));
-        $record->timestamp = 'asked <span title="2015-12-05 12:12:18Z" class="relativetime">20 hours ago</span>'; // TODO
         $record->userpicture = null;
         $record->username = null;
         $record->userreputation = null;
         $record->isfavourite = 1; // TODO
         $record->favouritecount = 5; // TODO
+        $record->tags = $this->get_tags();
 
         $user = \user_picture::unalias($this->record, array('deleted'), 'useridx', 'user');
         if (isset($user->id)) {
@@ -238,6 +274,7 @@ class mod_expertforum_post implements templatable {
             $record->userreputation = 15; // TODO
         }
 
+        $record->timestamp = $this->get_timestamp();
         if (empty($this->record->parent)) {
             $record->answers = array();
             $answers = $this->get_answers();
@@ -256,7 +293,6 @@ class mod_expertforum_post implements templatable {
         $record->downvoteurl = $this->get_url()->out(false,
                 array('downvote' => $this->record->id, 'sesskey' => sesskey()));
 
-        $record->tags = array(array('tagname' => 'php', 'tagurl' => '#'), array('tagname' => 'moodle', 'tagurl' => '#')); // TODO
         return $record;
     }
 }

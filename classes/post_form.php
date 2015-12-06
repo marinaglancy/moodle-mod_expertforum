@@ -62,6 +62,10 @@ class mod_expertforum_post_form extends moodleform {
 
         $mform->addElement('editor', 'message_editor', 'MESSAGE', mod_expertforum_post::editoroptions()); // TODO string;
 
+        if (!$parent) {
+            $mform->addElement('tags', 'tags', get_string('tags'));
+        }
+
         $data = array('e' => $expertforum->id);
         if ($parent) {
             $data['parent'] = $parent->id;

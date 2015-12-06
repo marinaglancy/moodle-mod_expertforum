@@ -32,6 +32,7 @@ require_once(dirname(__FILE__).'/lib.php');
 
 $id = optional_param('id', 0, PARAM_INT); // Course_module ID, or
 $instanceid  = optional_param('e', 0, PARAM_INT);  // ... expertforum instance ID - it should be named as the first character of the module.
+$tag = optional_param('tag', null, PARAM_TAG);
 
 if ($id) {
     list($course, $cm) = get_course_and_cm_from_cmid($id, 'expertforum');
@@ -58,6 +59,14 @@ $PAGE->set_url('/mod/expertforum/view.php', array('id' => $cm->id));
 $PAGE->set_title(format_string($expertforum->name));
 $PAGE->set_heading(format_string($course->fullname));
 
+$tagobject = null;
+if ($tag) {
+    require_once($CFG->dirroot.'/tag/lib.php');
+    if ($tagobject = tag_get('name', $tag)) {
+        $PAGE->navbar->add($tagobject->rawname);
+    }
+}
+
 /*
  * Other things you may want to set - remove if not needed.
  * $PAGE->set_cacheable(false);
@@ -78,7 +87,7 @@ echo $OUTPUT->single_button(
         'Ask question' // TODO string
         );
 
-$listing = new mod_expertforum\output\listing($cm);
+$listing = new mod_expertforum\output\listing($cm, $tagobject);
 echo $OUTPUT->render_from_template('mod_expertforum/listing', $listing->export_for_template($OUTPUT));
 
 // Finish the page.

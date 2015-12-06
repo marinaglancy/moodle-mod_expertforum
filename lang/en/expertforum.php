@@ -29,8 +29,10 @@
 defined('MOODLE_INTERNAL') || die();
 
 $string['answerdownvote'] = 'This answer is not useful';
+$string['answeredago'] = 'answered {$a} ago';
 $string['answerscount'] = '<strong>{$a}</strong> answers';
 $string['answerupvote'] = 'This answer is useful';
+$string['askedago'] = 'asked {$a} ago';
 $string['downvote'] = 'down vote';
 $string['expertforumname'] = 'Expert forum name';
 $string['favourite'] = 'favourite';
