@@ -39,10 +39,19 @@ require_once($CFG->libdir . '/formslib.php');
 class mod_expertforum_post_form extends moodleform {
 
     public function definition() {
+        global $CFG, $PAGE;
+        require_once($CFG->dirroot.'/tag/lib.php');
 
         $expertforum = $this->_customdata['expertforum'];
+        $cm = $this->_customdata['cm'];
         $parent = null;
-        if (!empty($this->_customdata['parent'])) {
+        $post = null;
+        if (!empty($this->_customdata['post'])) {
+            $post = $this->_customdata['post'];
+            if ($post->parent) {
+                $parent = (object)array('id' => $post->parent);
+            }
+        } else if (!empty($this->_customdata['parent'])) {
             $parent = $this->_customdata['parent'];
         }
 
@@ -51,24 +60,39 @@ class mod_expertforum_post_form extends moodleform {
         $mform->addElement('hidden', 'e');
         $mform->setType('e', PARAM_INT);
 
+        $mform->addElement('hidden', 'edit');
+        $mform->setType('edit', PARAM_INT);
+
         $mform->addElement('hidden', 'parent');
         $mform->setType('parent', PARAM_INT);
 
         if (!$parent) {
-            $mform->addElement('text', 'subject', 'SUBJECT'); // TODO string;
+            $mform->addElement('text', 'subject', get_string('postsubject', 'mod_expertforum'));
             $mform->setType('subject', PARAM_NOTAGS);
             // TODO limit length
         }
 
-        $mform->addElement('editor', 'message_editor', 'MESSAGE', mod_expertforum_post::editoroptions()); // TODO string;
+        $mform->addElement('editor', 'message_editor',
+                $parent ? get_string('youranswer', 'mod_expertforum') :
+                get_string('yourquestion', 'mod_expertforum'),
+                mod_expertforum_post::editoroptions($cm));
 
         if (!$parent) {
             $mform->addElement('tags', 'tags', get_string('tags'));
         }
 
-        $data = array('e' => $expertforum->id);
+        $data = (object)array('e' => $expertforum->id);
         if ($parent) {
-            $data['parent'] = $parent->id;
+            $data->parent = $parent->id;
+        }
+        if ($post) {
+            $data->subject = $post->subject;
+            $data->edit = $post->id;
+            $data->tags = tag_get_tags_array('expertforum_post', $post->id);
+            $data->message = $post->message;
+            $data->messageformat = $post->messageformat;
+            $data = file_prepare_standard_editor($data, 'message', mod_expertforum_post::editoroptions($cm),
+                $cm->context, 'mod_expertforum', 'post', $post->id);
         }
         $this->set_data($data);
 

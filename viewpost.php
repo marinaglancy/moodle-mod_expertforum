@@ -51,7 +51,9 @@ $PAGE->set_url($post->get_url());
 $PAGE->set_title($post->get_formatted_subject());
 $PAGE->set_heading(format_string($course->fullname));
 
-$form = new mod_expertforum_post_form(null, array('expertforum' => $expertforum, 'parent' => $post));
+$form = new mod_expertforum_post_form(null,
+        array('expertforum' => $expertforum, 'parent' => $post, 'cm' => $cm),
+        'post', '', array('class' => 'mod_expertforum_post'));
 
 if ($form->is_cancelled()) {
     redirect($PAGE->url);

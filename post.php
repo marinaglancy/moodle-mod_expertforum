@@ -25,11 +25,19 @@
 require_once(__DIR__ . '/../../config.php');
 
 $instanceid  = required_param('e', PARAM_INT);
+$editpostid  = optional_param('edit', null, PARAM_INT);
 
 list($course, $cm) = get_course_and_cm_from_instance($instanceid, 'expertforum');
 
 require_login($course, true, $cm);
 $expertforum  = $DB->get_record('expertforum', array('id' => $cm->instance), '*', MUST_EXIST);
+if ($editpostid) {
+    $postrecord = $DB->get_record('expertforum_post',
+            array('id' => $editpostid, 'expertforumid' => $expertforum->id), '*', MUST_EXIST);
+    $post = new mod_expertforum_post($postrecord, $cm);
+} else {
+    $post = null;
+}
 
 // Print the page header.
 
@@ -37,12 +45,18 @@ $PAGE->set_url('/mod/expertforum/post.php', array('e' => $cm->instance));
 $PAGE->set_title(format_string($expertforum->name));
 $PAGE->set_heading(format_string($course->fullname));
 
-$form = new mod_expertforum_post_form(null, array('expertforum' => $expertforum));
+$form = new mod_expertforum_post_form(null,
+        array('expertforum' => $expertforum, 'post' => $post, 'cm' => $cm),
+        'post', '', array('class' => 'mod_expertforum_post'));
 
 if ($form->is_cancelled()) {
     redirect(new moodle_url('/mod/expertforum/view.php', array('id' => $cm->id)));
 } else if ($data = $form->get_data()) {
-    $post = mod_expertforum_post::create($data, $cm);
+    if ($post) {
+        $post->update($data);
+    } else {
+        $post = mod_expertforum_post::create($data, $cm);
+    }
     redirect($post->get_url());
 }
 

@@ -54,13 +54,13 @@ class mod_expertforum_post implements templatable {
         return ($name === 'cm') || isset($this->record->$name);
     }
 
-    public static function editoroptions() {
-        return array('trusttext' => 1); // TODO maxbytes,maxfiles.
+    public static function editoroptions(cm_info $cm) {
+        return array('trusttext' => 1, 'context' => $cm->context); // TODO maxbytes,maxfiles.
     }
 
     public static function create($data, cm_info $cm) {
         global $USER, $DB, $CFG;
-        require_once($CFG->dirroot.'/tag/lib.php');
+
         $time = time();
         $data = (object)((array)$data + array(
             'groupid' => 0,
@@ -92,17 +92,42 @@ class mod_expertforum_post implements templatable {
         $data->id = $DB->insert_record('expertforum_post', $data);
 
         if (isset($data->message_editor)) {
-            $data = file_postupdate_standard_editor($data, 'message', self::editoroptions(),
+            $data = file_postupdate_standard_editor($data, 'message', self::editoroptions($cm),
                 $cm->context, 'mod_expertforum', 'post', $data->id);
             unset($data->message_editor);
             $DB->update_record('expertforum_post', $data);
         }
 
         if (!empty($data->tags)) {
+            require_once($CFG->dirroot.'/tag/lib.php');
             tag_set('expertforum_post', $data->id, $data->tags, 'mod_expertforum', $cm->context->id);
         }
 
         return new mod_expertforum_post($data, $cm);
+    }
+
+    public function update($formdata) {
+        global $DB, $CFG;
+
+        $allowedkeys = array('message' => 1, 'messageformat' => 1, 'message_editor' => 1);
+        if (!$this->record->parent) {
+            $allowedkeys['subject'] = 1;
+        }
+        $data = (object)array_intersect_key((array)$formdata, $allowedkeys);
+        $data->id = $this->record->id;
+        $data->timemodified = time();
+
+        if (isset($data->message_editor)) {
+            $data = file_postupdate_standard_editor($data, 'message', self::editoroptions($this->cm),
+                $this->cm->context, 'mod_expertforum', 'post', $data->id);
+            unset($data->message_editor);
+        }
+        $DB->update_record('expertforum_post', $data);
+
+        if (!$this->record->parent && isset($formdata->tags)) {
+            require_once($CFG->dirroot.'/tag/lib.php');
+            tag_set('expertforum_post', $data->id, $formdata->tags, 'mod_expertforum', $this->cm->context->id);
+        }
     }
 
     public function get_url($params = null) {
@@ -301,6 +326,9 @@ class mod_expertforum_post implements templatable {
                 array('upvote' => $this->record->id, 'sesskey' => sesskey()));
         $record->downvoteurl = $this->get_url()->out(false,
                 array('downvote' => $this->record->id, 'sesskey' => sesskey()));
+
+        $url = new moodle_url('/mod/expertforum/post.php', array('e' => $this->cm->instance, 'edit' => $this->record->id));
+        $record->editurl = $url->out(false);
 
         return $record;
     }

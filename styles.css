@@ -1,3 +1,18 @@
+.mform.mod_expertforum_post .fitem div.fitemtitle {
+    display: block;
+    width: 100%;
+    text-align: left;
+    margin-top: 4px;
+    margin-bottom: 4px;
+}
+.mform.mod_expertforum_post .fitem .felement {
+    float: left;
+    width: 100%;
+    padding-right: 0px;
+    padding-left: 0px;
+    margin-left: 0px;
+}
+
 .mod-expertforum-questionlist {
     clear: both;
     float: left;
