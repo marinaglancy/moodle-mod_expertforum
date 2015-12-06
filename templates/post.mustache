@@ -49,9 +49,11 @@
             <td class="votecell">
                 <div class="vote">
                     <input name="_id_" value="{{id}}" type="hidden">
-                    <a class="vote-up-off" title="{{^parent}}{{#str}}questionupvote,mod_expertforum{{/str}}{{/parent}}{{#parent}}{{#str}}answerupvote,mod_expertforum{{/str}}{{/parent}}" href="{{upvoteurl}}">{{#str}}upvote,mod_expertforum{{/str}}</a>
+                    <a class="vote-up-off" title="{{^parent}}{{#str}}questionupvote,mod_expertforum{{/str}}{{/parent}}{{#parent}}{{#str}}answerupvote,mod_expertforum{{/str}}{{/parent}}"
+                        {{#upvoteurl}}href="{{upvoteurl}}"{{/upvoteurl}}>{{#str}}upvote,mod_expertforum{{/str}}</a>
                     <span itemprop="upvoteCount" class="votes">{{#str}}votescountshort,mod_expertforum,{{votes}}{{/str}}</span>
-                    <a class="vote-down-off" title="{{^parent}}{{#str}}questiondownvote,mod_expertforum{{/str}}{{/parent}}{{#parent}}{{#str}}answerdownvote,mod_expertforum{{/str}}{{/parent}}" href="{{downvoteurl}}">{{#str}}downvote,mod_expertforum{{/str}}</a>
+                    <a class="vote-down-off" title="{{^parent}}{{#str}}questiondownvote,mod_expertforum{{/str}}{{/parent}}{{#parent}}{{#str}}answerdownvote,mod_expertforum{{/str}}{{/parent}}"
+                        {{#downvoteurl}}href="{{downvoteurl}}"{{/downvoteurl}}>{{#str}}downvote,mod_expertforum{{/str}}</a>
                     {{^parent}}
                         <!--TODO-->
                         {{#isfavourite}}

@@ -36,6 +36,7 @@ class mod_expertforum_post implements templatable {
     protected $record;
     protected $cm;
     protected $cachedtags = null;
+    protected $cachedparent = null;
 
     public function __construct($record, cm_info $cm, $fetchedtags = null) {
         $this->record = $record;
@@ -56,6 +57,12 @@ class mod_expertforum_post implements templatable {
 
     public static function editoroptions(cm_info $cm) {
         return array('trusttext' => 1, 'context' => $cm->context); // TODO maxbytes,maxfiles.
+    }
+
+    public static function can_create(cm_info $cm) {
+        global $USER;
+        // TODO
+        return isloggedin() && !isguestuser();
     }
 
     public static function create($data, cm_info $cm) {
@@ -106,6 +113,12 @@ class mod_expertforum_post implements templatable {
         return new mod_expertforum_post($data, $cm);
     }
 
+    public function can_update() {
+        global $USER;
+        // TODO
+        return isloggedin() && !isguestuser() && ($USER->id == $this->record->userid);
+    }
+
     public function update($formdata) {
         global $DB, $CFG;
 
@@ -137,9 +150,25 @@ class mod_expertforum_post implements templatable {
         return $url;
     }
 
+    public function get_parent() {
+        global $DB;
+        if (empty($this->record->parent)) {
+            return null;
+        }
+        if ($this->cachedparent === null) {
+            $this->cachedparent = new self(
+                    $DB->get_record('expertforum_post', array('id' => $this->record->parent)),
+                    $this->cm);
+        }
+        return $this->cachedparent;
+    }
+
     public function get_formatted_subject() {
         global $CFG;
         require_once($CFG->libdir.'/externallib.php');
+        if ($parent = $this->get_parent()) {
+            return $parent->get_formatted_subject();
+        }
         return external_format_string($this->record->subject, $this->cm->context->id);
     }
 
@@ -177,6 +206,12 @@ class mod_expertforum_post implements templatable {
         return null;
     }
 
+    public function can_answer() {
+        global $USER;
+        // TODO
+        return isloggedin() && !isguestuser();
+    }
+
     public function get_answers() {
         global $DB;
         $userfields = \user_picture::fields('u', array('deleted'), 'useridx', 'user');
@@ -188,18 +223,28 @@ class mod_expertforum_post implements templatable {
                 array($this->record->id, $this->cm->instance));
         $answers = array();
         foreach ($records as $record) {
-            $answers[] = new self($record, $this->cm);
+            $answer = new self($record, $this->cm);
+            $answer->cachedparent = $this;
+            $answers[] = $answer;
         }
         return $answers;
+    }
+
+    public function can_upvote() {
+        global $USER;
+        // TODO
+        return isloggedin() && !isguestuser() && $USER->id != $this->record->userid;
+    }
+
+    public function can_downvote() {
+        global $USER;
+        // TODO
+        return isloggedin() && !isguestuser() && $USER->id != $this->record->userid;
     }
 
     public function vote($answerid, $vote) {
         global $DB, $USER;
         if (!isloggedin() || isguestuser()) {
-            return;
-        }
-        if ($this->record->userid == $USER->id) {
-            // Can't vote on own posts.
             return;
         }
         $params = array('userid' => $USER->id, 'answerid' => $answerid, 'parent' => $this->record->id);
@@ -208,12 +253,16 @@ class mod_expertforum_post implements templatable {
         } else {
             $parentsql = 'IS NULL';
         }
-        $answer = $DB->get_record_sql('SELECT p.id, p.parent, v.id AS voteid, v.vote
+        $answer = $DB->get_record_sql('SELECT p.id, p.parent, p.userid AS author, v.id AS voteid, v.vote
                 FROM {expertforum_post} p
                 LEFT JOIN {expertforum_vote} v ON v.postid = p.id AND v.userid = :userid
                 WHERE p.id = :answerid AND p.parent '.$parentsql,
                 $params);
         if (!$answer) {
+            return;
+        }
+        if ($answer->author == $USER->id) {
+            // Can't vote on own posts.
             return;
         }
         if ($answer->voteid) {
@@ -290,9 +339,9 @@ class mod_expertforum_post implements templatable {
         $record->subject = $this->get_formatted_subject();
         $record->message = $this->get_formatted_message();
         $record->votes = empty($this->votes) ? 0 : $this->votes;
-        $record->userpicture = null;
-        $record->username = null;
-        $record->userreputation = null;
+        $record->userpicture = '';
+        $record->username = '';
+        $record->userreputation = '';
         $record->isfavourite = 1; // TODO
         $record->favouritecount = 5; // TODO
         $record->tags = $this->get_tags();
@@ -322,13 +371,22 @@ class mod_expertforum_post implements templatable {
             $record->parent = $this->record->parent;
         }
 
-        $record->upvoteurl = $this->get_url()->out(false,
-                array('upvote' => $this->record->id, 'sesskey' => sesskey()));
-        $record->downvoteurl = $this->get_url()->out(false,
-                array('downvote' => $this->record->id, 'sesskey' => sesskey()));
+        $record->upvoteurl = '';
+        $record->downvoteurl = '';
+        if ($this->can_upvote()) {
+            $record->upvoteurl = $this->get_url()->out(false,
+                    array('upvote' => $this->record->id, 'sesskey' => sesskey()));
+        }
+        if ($this->can_downvote()) {
+            $record->downvoteurl = $this->get_url()->out(false,
+                    array('downvote' => $this->record->id, 'sesskey' => sesskey()));
+        }
 
-        $url = new moodle_url('/mod/expertforum/post.php', array('e' => $this->cm->instance, 'edit' => $this->record->id));
-        $record->editurl = $url->out(false);
+        $record->editurl = '';
+        if ($this->can_update()) {
+            $url = new moodle_url('/mod/expertforum/post.php', array('e' => $this->cm->instance, 'edit' => $this->record->id));
+            $record->editurl = $url->out(false);
+        }
 
         return $record;
     }

@@ -35,8 +35,16 @@ if ($editpostid) {
     $postrecord = $DB->get_record('expertforum_post',
             array('id' => $editpostid, 'expertforumid' => $expertforum->id), '*', MUST_EXIST);
     $post = new mod_expertforum_post($postrecord, $cm);
+    if (!$post->can_update()) {
+        throw new moodle_exception('notallowededit', 'mod_expertforum');
+    }
+    $PAGE->navbar->add($post->get_formatted_subject(), $post->get_url());
+    $PAGE->navbar->add(get_string('editlink', 'mod_expertforum'));
 } else {
     $post = null;
+    if (!mod_expertforum_post::can_create($cm)) {
+        throw new moodle_exception('notallowedcreate', 'mod_expertforum');
+    }
 }
 
 // Print the page header.

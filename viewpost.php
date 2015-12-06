@@ -51,15 +51,18 @@ $PAGE->set_url($post->get_url());
 $PAGE->set_title($post->get_formatted_subject());
 $PAGE->set_heading(format_string($course->fullname));
 
-$form = new mod_expertforum_post_form(null,
-        array('expertforum' => $expertforum, 'parent' => $post, 'cm' => $cm),
-        'post', '', array('class' => 'mod_expertforum_post'));
+$form = null;
+if ($post->can_answer()) {
+    $form = new mod_expertforum_post_form(null,
+            array('expertforum' => $expertforum, 'parent' => $post, 'cm' => $cm),
+            'post', '', array('class' => 'mod_expertforum_post'));
 
-if ($form->is_cancelled()) {
-    redirect($PAGE->url);
-} else if ($data = $form->get_data()) {
-    $post = mod_expertforum_post::create($data, $cm);
-    redirect($post->get_url());
+    if ($form->is_cancelled()) {
+        redirect($PAGE->url);
+    } else if ($data = $form->get_data()) {
+        $post = mod_expertforum_post::create($data, $cm);
+        redirect($post->get_url());
+    }
 }
 
 $PAGE->navbar->add($post->get_formatted_subject());
@@ -69,7 +72,9 @@ echo $OUTPUT->heading($post->get_formatted_subject());
 
 echo $OUTPUT->render_from_template('mod_expertforum/thread', $post->export_for_template($OUTPUT));
 
-$form->display();
+if ($form) {
+    $form->display();
+}
 
 // Finish the page.
 echo $OUTPUT->footer();
