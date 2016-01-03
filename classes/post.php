@@ -30,6 +30,20 @@ defined('MOODLE_INTERNAL') || die();
  * @package   mod_expertforum
  * @copyright 2015 Marina Glancy
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ *
+ * @property-read int id
+ * @property-read int courseid
+ * @property-read int expertforumid
+ * @property-read int parent
+ * @property-read int userid
+ * @property-read int groupid
+ * @property-read string subject
+ * @property-read string message
+ * @property-read int messageformat
+ * @property-read int messagetrust
+ * @property-read int timecreated
+ * @property-read int timemodified
+ * @property-read int votes
  */
 class mod_expertforum_post implements templatable {
 
@@ -37,6 +51,7 @@ class mod_expertforum_post implements templatable {
     protected $cm;
     protected $cachedtags = null;
     protected $cachedparent = null;
+    protected $answers = null;
 
     public function __construct($record, cm_info $cm, $fetchedtags = null) {
         $this->record = $record;
@@ -119,6 +134,11 @@ class mod_expertforum_post implements templatable {
         return isloggedin() && !isguestuser() && ($USER->id == $this->record->userid);
     }
 
+    /**
+     *
+     * @param stdClass $formdata data from the form, allowed keys:
+     *      message, messageformat, message_editor, tags
+     */
     public function update($formdata) {
         global $DB, $CFG;
 
@@ -186,9 +206,9 @@ class mod_expertforum_post implements templatable {
         return $text;
     }
 
-    public function get_excerpt() {
+    public function get_excerpt($maxlength = 250) {
         $message = $this->get_formatted_message();
-        return html_to_text(shorten_text($message, 250), 300); // TODO exceprt legth as parameter.
+        return html_to_text(shorten_text($message, $maxlength), $maxlength + 100);
     }
 
     public static function get($id, cm_info $cm, $strictness = IGNORE_MISSING) {
@@ -212,8 +232,15 @@ class mod_expertforum_post implements templatable {
         return isloggedin() && !isguestuser();
     }
 
-    public function get_answers() {
+    public function get_answers($usecache = true) {
         global $DB;
+        if ($this->record->parent) {
+            // Answers do not have sub-answers.
+            return array();
+        }
+        if ($usecache && $this->answers !== null) {
+            return $this->answers;
+        }
         $userfields = \user_picture::fields('u', array('deleted'), 'useridx', 'user');
         $records = $DB->get_records_sql('SELECT a.*, ' . $userfields . '
                 FROM {expertforum_post} a
@@ -221,13 +248,13 @@ class mod_expertforum_post implements templatable {
                 WHERE a.parent = ? AND a.expertforumid = ?
                 ORDER BY a.votes DESC, a.timecreated, a.id',
                 array($this->record->id, $this->cm->instance));
-        $answers = array();
+        $this->answers = array();
         foreach ($records as $record) {
             $answer = new self($record, $this->cm);
             $answer->cachedparent = $this;
-            $answers[] = $answer;
+            $this->answers[$answer->id] = $answer;
         }
-        return $answers;
+        return $this->answers;
     }
 
     public function can_upvote() {
@@ -242,21 +269,34 @@ class mod_expertforum_post implements templatable {
         return isloggedin() && !isguestuser() && $USER->id != $this->record->userid;
     }
 
-    public function vote($answerid, $vote) {
+    public function find_answer($answerid, $strictness = IGNORE_MISSING) {
+        $answers = $this->get_answers();
+        if (isset($answers[$answerid])) {
+            return $answers[$answerid];
+        } else if ($strictness == MUST_EXIST) {
+            throw new moodle_exception('postnotfound', 'mod_expertforum');
+        }
+        return null;
+    }
+
+    public function vote($postid, $vote) {
+        if ($postid == $this->record->id) {
+            $this->voteme($vote);
+        } else if ($answer = $this->find_answer($postid)) {
+            $answer->voteme($vote);
+        }
+    }
+
+    protected function voteme($vote) {
         global $DB, $USER;
         if (!isloggedin() || isguestuser()) {
             return;
         }
-        $params = array('userid' => $USER->id, 'answerid' => $answerid, 'parent' => $this->record->id);
-        if ($answerid != $this->record->id) {
-            $parentsql = '= :parent';
-        } else {
-            $parentsql = 'IS NULL';
-        }
+        $params = array('userid' => $USER->id, 'postid' => $this->record->id);
         $answer = $DB->get_record_sql('SELECT p.id, p.parent, p.userid AS author, v.id AS voteid, v.vote
                 FROM {expertforum_post} p
                 LEFT JOIN {expertforum_vote} v ON v.postid = p.id AND v.userid = :userid
-                WHERE p.id = :answerid AND p.parent '.$parentsql,
+                WHERE p.id = :postid',
                 $params);
         if (!$answer) {
             return;
@@ -279,15 +319,18 @@ class mod_expertforum_post implements templatable {
                 'userid' => $USER->id,
                 'courseid' => $this->cm->course,
                 'expertforumid' => $this->cm->instance,
-                'parent' => $this->record->id,
-                'postid' => $answerid,
+                'parent' => $this->record->parent ?: $this->record->id, // TODO field not needed.
+                'postid' => $this->record->id,
                 'timemodified' => time(),
                 'vote' => $vote
             ));
         }
-        $DB->execute("UPDATE {expertforum_post} p SET votes =
-                (SELECT SUM(v.vote) FROM {expertforum_vote} v WHERE v.postid = p.id)
-                WHERE p.id = :answerid", $params);
+        $votes = $DB->get_field_sql("SELECT SUM(v.vote) "
+                . "FROM {expertforum_vote} v WHERE v.postid = ?",
+                array($this->record->id));
+        $DB->update_record('expertforum_post', array('id' => $this->record->id,
+            'votes' => $votes));
+        $this->record->votes = $votes;
         /*$DB->execute("UPDATE {expertforum_post} p SET votes =
                 (SELECT SUM(v.vote) FROM {expertforum_vote} v WHERE v.parent = p.id)
                 WHERE p.id = :parent", $params);*/
@@ -305,6 +348,11 @@ class mod_expertforum_post implements templatable {
         }
     }
 
+    /**
+     *
+     * @return array list of tags associated with this post, each element is array with
+     *  two keys - tagname and tagurl
+     */
     public function get_tags() {
         global $CFG;
         require_once($CFG->dirroot.'/tag/lib.php');

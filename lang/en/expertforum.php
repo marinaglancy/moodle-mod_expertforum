@@ -47,6 +47,7 @@ $string['notallowedcreate'] = 'You are not allowed to post here';
 $string['notallowededit'] = 'You are not allowed to edit this';
 $string['pluginadministration'] = 'Expert forum administration';
 $string['pluginname'] = 'Expert forum';
+$string['postnotfound'] = 'Post not found';
 $string['postsubject'] = 'Title';
 $string['questiondownvote'] = 'This question does not show any research effort; it is unclear or not useful';
 $string['questionupvote'] = 'This question shows research effort; it is useful and clear';
