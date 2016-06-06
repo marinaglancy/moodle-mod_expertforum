@@ -44,6 +44,7 @@ class listing implements templatable {
      * Constructor
      *
      * @param \cm_info $cm
+     * @param \core_tag_tag $tagobject
      * @global \moodle_database $DB
      */
     public function __construct(cm_info $cm, $tagobject = null) {
@@ -51,8 +52,10 @@ class listing implements templatable {
         $params = array('expertforumid' => $cm->instance, 'courseid' => $cm->course);
         $subquery = '';
         if ($tagobject) {
-            $subquery = "INNER JOIN {tag_instance} ti ON ti.itemtype = :recordtype AND ti.itemid = p.id AND ti.tagid = :tagid";
+            $subquery = "INNER JOIN {tag_instance} ti ON ti.component = :component AND "
+                    . "ti.itemtype = :recordtype AND ti.itemid = p.id AND ti.tagid = :tagid";
             $params['tagid'] = $tagobject->id;
+            $params['component'] = 'mod_expertforum';
             $params['recordtype'] = 'expertforum_post';
         }
         $postfields = "p.id, p.subject, p.votes, p.timecreated, p.subject, p.message, p.messageformat";
@@ -82,8 +85,9 @@ class listing implements templatable {
         $sql = "SELECT ti.itemid, tg.id, tg.name, tg.rawname
                   FROM {tag_instance} ti
                   JOIN {tag} tg ON tg.id = ti.tagid
-                  WHERE ti.itemtype = :recordtype AND ti.itemid $itemsql
+                  WHERE ti.component = :component AND ti.itemtype = :recordtype AND ti.itemid $itemsql
                ORDER BY ti.ordering ASC";
+        $itemparams['component'] = 'mod_expertforum';
         $itemparams['recordtype'] = 'expertforum_post';
         $rs = $DB->get_recordset_sql($sql, $itemparams);
         foreach ($rs as $record) {

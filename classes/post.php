@@ -81,7 +81,7 @@ class mod_expertforum_post implements templatable {
     }
 
     public static function create($data, cm_info $cm) {
-        global $USER, $DB, $CFG;
+        global $USER, $DB;
 
         $time = time();
         $data = (object)((array)$data + array(
@@ -120,9 +120,8 @@ class mod_expertforum_post implements templatable {
             $DB->update_record('expertforum_post', $data);
         }
 
-        if (!empty($data->tags)) {
-            require_once($CFG->dirroot.'/tag/lib.php');
-            tag_set('expertforum_post', $data->id, $data->tags, 'mod_expertforum', $cm->context->id);
+        if (isset($data->tags)) {
+            core_tag_tag::set_item_tags('mod_expertforum', 'expertforum_post', $data->id, $cm->context, $data->tags);
         }
 
         return new mod_expertforum_post($data, $cm);
@@ -140,7 +139,7 @@ class mod_expertforum_post implements templatable {
      *      message, messageformat, message_editor, tags
      */
     public function update($formdata) {
-        global $DB, $CFG;
+        global $DB;
 
         $allowedkeys = array('message' => 1, 'messageformat' => 1, 'message_editor' => 1);
         if (!$this->record->parent) {
@@ -158,8 +157,8 @@ class mod_expertforum_post implements templatable {
         $DB->update_record('expertforum_post', $data);
 
         if (!$this->record->parent && isset($formdata->tags)) {
-            require_once($CFG->dirroot.'/tag/lib.php');
-            tag_set('expertforum_post', $data->id, $formdata->tags, 'mod_expertforum', $this->cm->context->id);
+            core_tag_tag::set_item_tags('mod_expertforum', 'expertforum_post',
+                    $data->id, $this->cm->context, $formdata->tags);
         }
     }
 
@@ -354,17 +353,15 @@ class mod_expertforum_post implements templatable {
      *  two keys - tagname and tagurl
      */
     public function get_tags() {
-        global $CFG;
-        require_once($CFG->dirroot.'/tag/lib.php');
         $rv = array();
         if (empty($this->record->parent)) {
             if ($this->cachedtags === null) {
-                $this->cachedtags = tag_get_tags('expertforum_post', $this->id);
+                $this->cachedtags = core_tag_tag::get_item_tags('mod_expertforum', 'expertforum_post', $this->id);
             }
             $url = new moodle_url('/mod/expertforum/view.php', array('id' => $this->cm->id));
             foreach ($this->cachedtags as $tag) {
                 $url->param('tag', $tag->name);
-                $rv[] = array('tagname' => $tag->rawname,
+                $rv[] = array('tagname' => core_tag_tag::make_display_name($tag),
                     'tagurl' => $url->out(false));
             }
         }

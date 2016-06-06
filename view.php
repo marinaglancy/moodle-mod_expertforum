@@ -61,9 +61,9 @@ $PAGE->set_heading(format_string($course->fullname));
 
 $tagobject = null;
 if ($tag) {
-    require_once($CFG->dirroot.'/tag/lib.php');
-    if ($tagobject = tag_get('name', $tag)) {
-        $PAGE->navbar->add($tagobject->rawname);
+    $tagcollid = core_tag_area::get_collection('mod_expertforum', 'expertforum_post');
+    if ($tagobject = core_tag_tag::get_by_name($tagcollid, $tag)) {
+        $PAGE->navbar->add($tagobject->get_display_name());
     }
 }
 

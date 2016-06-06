@@ -39,9 +39,6 @@ require_once($CFG->libdir . '/formslib.php');
 class mod_expertforum_post_form extends moodleform {
 
     public function definition() {
-        global $CFG, $PAGE;
-        require_once($CFG->dirroot.'/tag/lib.php');
-
         $expertforum = $this->_customdata['expertforum'];
         $cm = $this->_customdata['cm'];
         $parent = null;
@@ -78,7 +75,8 @@ class mod_expertforum_post_form extends moodleform {
                 mod_expertforum_post::editoroptions($cm));
 
         if (!$parent) {
-            $mform->addElement('tags', 'tags', get_string('tags'));
+            $mform->addElement('tags', 'tags', get_string('tags'),
+                ['component' => 'mod_expertforum', 'itemtype' => 'expertforum_post']);
         }
 
         $data = (object)array('e' => $expertforum->id);
@@ -88,7 +86,7 @@ class mod_expertforum_post_form extends moodleform {
         if ($post) {
             $data->subject = $post->subject;
             $data->edit = $post->id;
-            $data->tags = tag_get_tags_array('expertforum_post', $post->id);
+            $data->tags = core_tag_tag::get_item_tags_array('mod_expertforum', 'expertforum_post', $post->id);
             $data->message = $post->message;
             $data->messageformat = $post->messageformat;
             $data = file_prepare_standard_editor($data, 'message', mod_expertforum_post::editoroptions($cm),
