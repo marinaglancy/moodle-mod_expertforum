@@ -72,6 +72,11 @@ class listing implements templatable {
         // TODO limit, offset
         $this->records = $DB->get_records_sql($sql, $params);
         $this->cm = $cm;
+        $this->fetchedtags = array();
+
+        if (!$this->records) {
+            return;
+        }
 
         list($itemsql, $itemparams) = $DB->get_in_or_equal(array_keys($this->records), SQL_PARAMS_NAMED);
         $sql = "SELECT ti.itemid, tg.id, tg.name, tg.rawname
@@ -80,7 +85,6 @@ class listing implements templatable {
                   WHERE ti.itemtype = :recordtype AND ti.itemid $itemsql
                ORDER BY ti.ordering ASC";
         $itemparams['recordtype'] = 'expertforum_post';
-        $this->fetchedtags = array();
         $rs = $DB->get_recordset_sql($sql, $itemparams);
         foreach ($rs as $record) {
             $this->fetchedtags[$record->itemid][] = $record;

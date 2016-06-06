@@ -65,7 +65,7 @@ if ($post->can_answer()) {
     }
 }
 
-$PAGE->navbar->add($post->get_formatted_subject());
+$PAGE->navbar->add($post->get_formatted_subject(), $post->get_url());
 
 echo $OUTPUT->header();
 echo $OUTPUT->heading($post->get_formatted_subject());
