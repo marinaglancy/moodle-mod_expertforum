@@ -43,56 +43,9 @@ class listing implements templatable {
     /**
      * Constructor
      *
-     * @param \cm_info $cm
-     * @param \core_tag_tag $tagobject
-     * @global \moodle_database $DB
      */
-    public function __construct(cm_info $cm, $tagobject = null) {
-        global $DB;
-        $params = array('expertforumid' => $cm->instance, 'courseid' => $cm->course);
-        $subquery = '';
-        if ($tagobject) {
-            $subquery = "INNER JOIN {tag_instance} ti ON ti.component = :component AND "
-                    . "ti.itemtype = :recordtype AND ti.itemid = p.id AND ti.tagid = :tagid";
-            $params['tagid'] = $tagobject->id;
-            $params['component'] = 'mod_expertforum';
-            $params['recordtype'] = 'expertforum_post';
-        }
-        $postfields = "p.id, p.subject, p.votes, p.timecreated, p.subject, p.message, p.messageformat";
-        $userfields = user_picture::fields('u', array('deleted'), 'useridx', 'user');
-        $userfieldsnoalias = user_picture::fields('u', array('deleted'));
-        $sql = "SELECT $postfields, $userfields, COUNT(a.id) AS answers
-            FROM {expertforum_post} p
-            $subquery
-            LEFT OUTER JOIN {user} u ON u.deleted = 0 AND u.id = p.userid
-            LEFT OUTER JOIN {expertforum_post} a ON a.parent = p.id
-            WHERE p.parent is null
-                AND p.expertforumid = :expertforumid
-                AND p.courseid = :courseid
-            GROUP BY $postfields, $userfieldsnoalias
-            ORDER BY p.timecreated DESC
-                ";
-        // TODO limit, offset
-        $this->records = $DB->get_records_sql($sql, $params);
-        $this->cm = $cm;
-        $this->fetchedtags = array();
-
-        if (!$this->records) {
-            return;
-        }
-
-        list($itemsql, $itemparams) = $DB->get_in_or_equal(array_keys($this->records), SQL_PARAMS_NAMED);
-        $sql = "SELECT ti.itemid, tg.id, tg.name, tg.rawname
-                  FROM {tag_instance} ti
-                  JOIN {tag} tg ON tg.id = ti.tagid
-                  WHERE ti.component = :component AND ti.itemtype = :recordtype AND ti.itemid $itemsql
-               ORDER BY ti.ordering ASC";
-        $itemparams['component'] = 'mod_expertforum';
-        $itemparams['recordtype'] = 'expertforum_post';
-        $rs = $DB->get_recordset_sql($sql, $itemparams);
-        foreach ($rs as $record) {
-            $this->fetchedtags[$record->itemid][] = $record;
-        }
+    public function __construct($records) {
+        $this->records = $records;
     }
 
     /**
@@ -107,8 +60,11 @@ class listing implements templatable {
     public function export_for_template(\renderer_base $output) {
         $posts = array();
         foreach ($this->records as $id => $record) {
-            $post = new \mod_expertforum_post($record, $this->cm,
-                    empty($this->fetchedtags[$id]) ? array() : $this->fetchedtags[$id]);
+            //$cm = get_fast_modinfo($record->courseid)->cms[$record->cmid];
+            $cm = (object)['id' => $record->cmid, 'instance' => $record->expertforumid, 'course' => $record->courseid];
+            $tags = empty($record->tags) ? array() : $record->tags;
+            unset($record->tags);
+            $post = new \mod_expertforum_post($record, $cm, $tags);
             $user = \user_picture::unalias($record, array('deleted'), 'useridx', 'user');
 
             $r = new stdClass();
@@ -118,7 +74,7 @@ class listing implements templatable {
             $r->subject = $post->get_formatted_subject();
             $r->timecreated = userdate($record->timecreated, get_string('strftimedatetime', 'core_langconfig'));
             $r->votes = $record->votes;
-            $r->answers = $record->answers;
+            $r->answers = isset($record->answers) ? $record->answers : 0;
             $r->excerpt = $post->get_excerpt();
             $r->views = 0; // TODO
             $r->timestamp = $post->get_timestamp();
@@ -126,12 +82,12 @@ class listing implements templatable {
             // User information.
             $userpicture = new user_picture($user);
             $userpicture->size = 32;
-            $userpicture->courseid = $this->cm->course;
-            $context = \context_course::instance($this->cm->course);
+            $userpicture->courseid = $cm->course;
+            $context = \context_course::instance($cm->course);
             $r->username = fullname($user, has_capability('moodle/site:viewfullnames', $context));
             if (has_capability('moodle/user:viewdetails', $context)) {
                 $r->username = \html_writer::link(new \moodle_url('/user/view.php',
-                    array('id' => $user->id, 'course' => $this->cm->course)), $r->username);
+                    array('id' => $user->id, 'course' => $cm->course)), $r->username);
             } else {
                 $userpicture->link = false;
             }

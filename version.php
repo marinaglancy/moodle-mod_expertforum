@@ -28,7 +28,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'mod_expertforum';
-$plugin->version = 2016060601;
+$plugin->version = 2016060603;
 $plugin->release = 'v1.1';
 $plugin->requires = 2016052300;
 $plugin->maturity = MATURITY_ALPHA;

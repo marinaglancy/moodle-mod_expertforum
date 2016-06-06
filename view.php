@@ -87,8 +87,8 @@ echo $OUTPUT->single_button(
         'Ask question' // TODO string
         );
 
-$listing = new mod_expertforum\output\listing($cm, $tagobject);
-echo $OUTPUT->render_from_template('mod_expertforum/listing', $listing->export_for_template($OUTPUT));
+$page = optional_param('page', 0, PARAM_INT);
+echo mod_expertforum_listing::module_posts_display($cm, $tagobject, $page);
 
 // Finish the page.
 echo $OUTPUT->footer();

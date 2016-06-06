@@ -28,7 +28,6 @@ $tagareas = array(
     array(
         'itemtype' => 'expertforum_post',
         'component' => 'mod_expertforum',
-        'callback' => 'mod_expertforum_get_tagged_posts',
-        'callbackfile' => '/mod/expertforum/locallib.php',
+        'callback' => 'mod_expertforum_listing::tagged_posts_index',
     ),
 );

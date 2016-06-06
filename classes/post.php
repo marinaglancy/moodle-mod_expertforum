@@ -53,7 +53,13 @@ class mod_expertforum_post implements templatable {
     protected $cachedparent = null;
     protected $answers = null;
 
-    public function __construct($record, cm_info $cm, $fetchedtags = null) {
+    /**
+     *
+     * @param type $record
+     * @param cm_info|stdClass $cm must have at least properties: id, course, instance
+     * @param type $fetchedtags
+     */
+    public function __construct($record, $cm, $fetchedtags = null) {
         $this->record = $record;
         $this->cm = $cm;
         $this->cachedtags = $fetchedtags;
@@ -70,19 +76,21 @@ class mod_expertforum_post implements templatable {
         return ($name === 'cm') || isset($this->record->$name);
     }
 
-    public static function editoroptions(cm_info $cm) {
-        return array('trusttext' => 1, 'context' => $cm->context); // TODO maxbytes,maxfiles.
+    public static function editoroptions($cm) {
+        $context = context_module::instance($cm->id);
+        return array('trusttext' => 1, 'context' => $context); // TODO maxbytes,maxfiles.
     }
 
-    public static function can_create(cm_info $cm) {
+    public static function can_create($cm) {
         global $USER;
         // TODO
         return isloggedin() && !isguestuser();
     }
 
-    public static function create($data, cm_info $cm) {
+    public static function create($data, $cm) {
         global $USER, $DB;
 
+        $context = context_module::instance($cm->id);
         $time = time();
         $data = (object)((array)$data + array(
             'groupid' => 0,
@@ -109,19 +117,19 @@ class mod_expertforum_post implements templatable {
             $data->groupid = $parent->groupid;
             $data->subject = null;
         }
-        $data->messagetrust = trusttext_trusted($cm->context);
+        $data->messagetrust = trusttext_trusted($context);
 
         $data->id = $DB->insert_record('expertforum_post', $data);
 
         if (isset($data->message_editor)) {
             $data = file_postupdate_standard_editor($data, 'message', self::editoroptions($cm),
-                $cm->context, 'mod_expertforum', 'post', $data->id);
+                $context, 'mod_expertforum', 'post', $data->id);
             unset($data->message_editor);
             $DB->update_record('expertforum_post', $data);
         }
 
         if (isset($data->tags)) {
-            core_tag_tag::set_item_tags('mod_expertforum', 'expertforum_post', $data->id, $cm->context, $data->tags);
+            core_tag_tag::set_item_tags('mod_expertforum', 'expertforum_post', $data->id, $context, $data->tags);
         }
 
         return new mod_expertforum_post($data, $cm);
@@ -149,16 +157,17 @@ class mod_expertforum_post implements templatable {
         $data->id = $this->record->id;
         $data->timemodified = time();
 
+        $context = context_module::instance($this->cm->id);
         if (isset($data->message_editor)) {
             $data = file_postupdate_standard_editor($data, 'message', self::editoroptions($this->cm),
-                $this->cm->context, 'mod_expertforum', 'post', $data->id);
+                $context, 'mod_expertforum', 'post', $data->id);
             unset($data->message_editor);
         }
         $DB->update_record('expertforum_post', $data);
 
         if (!$this->record->parent && isset($formdata->tags)) {
             core_tag_tag::set_item_tags('mod_expertforum', 'expertforum_post',
-                    $data->id, $this->cm->context, $formdata->tags);
+                    $data->id, $context, $formdata->tags);
         }
     }
 
@@ -188,7 +197,8 @@ class mod_expertforum_post implements templatable {
         if ($parent = $this->get_parent()) {
             return $parent->get_formatted_subject();
         }
-        return external_format_string($this->record->subject, $this->cm->context->id);
+        $context = context_module::instance($this->cm->id);
+        return external_format_string($this->record->subject, $context->id);
     }
 
     public function get_formatted_message() {
@@ -196,9 +206,10 @@ class mod_expertforum_post implements templatable {
         require_once($CFG->libdir.'/externallib.php');
         // TODO not possible to set trusttext!
         //return $this->record->message;
+        $context = context_module::instance($this->cm->id);
         list($text, $textformat) = external_format_text($this->record->message,
                 $this->record->messageformat,
-                $this->cm->context->id,
+                $context->id,
                 'mod_expertforum',
                 'post',
                 $this->record->id);
@@ -210,7 +221,7 @@ class mod_expertforum_post implements templatable {
         return html_to_text(shorten_text($message, $maxlength), $maxlength + 100);
     }
 
-    public static function get($id, cm_info $cm, $strictness = IGNORE_MISSING) {
+    public static function get($id, $cm, $strictness = IGNORE_MISSING) {
         global $DB;
         $userfields = \user_picture::fields('u', array('deleted'), 'useridx', 'user');
         $record = $DB->get_record_sql('SELECT p.*, ' . $userfields . '
